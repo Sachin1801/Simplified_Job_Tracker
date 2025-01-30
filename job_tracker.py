@@ -150,11 +150,72 @@ def search_by_company_page(df):
                     key=f"app_{index}"
                 )
 
+                # Custom message for "Connection request pending"
+                if new_connection_status == "Connection request pending":
+                    st.write("**==Message to Connect==**")
+                    st.markdown(
+                        f"""
+                        Hi,
+
+                        I’m interested in applying for the **Summer Intern 2025** at **{row['company']}** and would love to connect. 
+                        I noticed your experience at the company and was hoping to learn more about your journey. 
+                        I would greatly appreciate a referral for the position.
+
+                        Best regards,  
+                        Sachin Adlakha
+                        """
+                    )
+
+                    # Generate LinkedIn search URL with filters for "software engineer" and the company
+                    company_name = row['company']
+                    linkedin_url = (
+                        f"https://www.linkedin.com/search/results/people/?keywords=software%20engineer"
+                        f"&currentCompany=[\"{company_name}\"]&origin=FACETED_SEARCH"
+                    )
+                    st.markdown(
+                        f"[🔗 Search for Software Engineers at {company_name} on LinkedIn]({linkedin_url})",
+                        unsafe_allow_html=True,
+                    )
+
+
                 if st.button(f"💾 Update '{row['company']}'", key=f"update_{index}"):
                     df.at[index, 'connection_status'] = new_connection_status
                     df.at[index, 'application_status'] = new_application_status
                     save_data(df)
                     st.success(f"✅ Updated {row['company']}!")
+                    
+                # Custom message for "Waiting for Referral"
+                if new_connection_status == "Waiting for referral":
+                    st.write("**==Message for Referral Request==**")
+                    
+                    # Display the custom message
+                    st.markdown(
+                        f"""
+                        Hi [Recipient's Name],  
+                        I hope you're doing well and in good health. Thanks for connecting!  
+
+                        I'm currently a graduate student at NYU pursuing an MS in Computer Science and exploring internship opportunities for Summer 2025.  
+                        I came across some exciting roles at **{row['company']}** and would love to apply. I've attached my resume for your reference.  
+
+                        If possible, I would greatly appreciate any advice on my profile or a referral for these roles:  
+
+                        [Insert job links here]  
+
+                        Thank you for your time and consideration. Looking forward to hearing from you!  
+
+                        Best regards,  
+                        Sachin Adlakha  
+                        Email: sa9082@nyu.edu  
+                        Phone: +1 646-633-5776  
+                        [Resume Link](https://drive.google.com/drive/folders/1e2Gmy8oYN3ebeBMbjpltWQLwMYGcZYq3?usp=sharing)
+                        """
+                    )
+
+
+
+
+
+
 
 def filter_by_date_page(df):
     st.header("📅 Filter Applications by Date")
