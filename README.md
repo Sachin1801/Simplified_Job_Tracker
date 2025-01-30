@@ -41,11 +41,13 @@ cd Job_Application_Tracker
 ```streamlit run job_tracker.py```
 
 ## Project Structure
+```
 Job_Application_Tracker/
 ├── job_tracker.py         # Main Streamlit application script
 ├── requirements.txt       # Python dependencies
 ├── .gitignore             # Excluded files (CSV, virtual environment, etc.)
 ├── README.md              # Project documentation
+```
 
 ## 🤝 Contributing
 Contributions are welcome! Feel free to fork this repository, create a feature branch, and submit a pull request.
