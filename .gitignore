@@ -1,5 +1,5 @@
 # Ignore virtual environment
-venv/
+.venv/
 
 # Ignore job applications CSV file
 job_applications.csv
@@ -17,3 +17,4 @@ __pycache__/
 # Ignore system files
 .DS_Store
 Thumbs.db
+.qodo

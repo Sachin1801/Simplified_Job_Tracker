@@ -82,5 +82,3 @@ This project is licensed under the MIT License. Feel free to use, modify, and di
 
 💬 Questions or Suggestions?
 Feel free to open an issue on GitHub or contact me directly for support.
-
-This README ensures clarity for anyone cloning the repository and setting it up. Let me know if further tweaks are needed! 🚀

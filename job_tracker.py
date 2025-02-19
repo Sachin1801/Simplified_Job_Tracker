@@ -2,8 +2,10 @@ import streamlit as st
 import pandas as pd
 import os
 from datetime import datetime
+import json
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
-CSV_FILE = "job_applications.csv"
 
 # Define the dropdown options
 CONNECTION_STATUS_OPTIONS = [
@@ -19,62 +21,60 @@ APPLICATION_STATUS_OPTIONS = [
     "Rejected",
 ]
 
-
-def load_data():
+def authenticate_google_sheets(json_file):
     """
-    Loads the job applications data from CSV into a pandas DataFrame.
-    If CSV does not exist, create an empty DataFrame.
+    Authenticate and return a Google Sheets client using the uploaded JSON file.
     """
-    if os.path.exists(CSV_FILE):
-        df = pd.read_csv(CSV_FILE, encoding="utf-8")
-    else:
-        df = pd.DataFrame(
-            columns=[
-                "company",
-                "job_links",
-                "date_applied",
-                "connection_status",
-                "application_status",
-            ]
-        )
-    return df
+    try:
+        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+        
+        # Read the uploaded JSON file correctly
+        creds_dict = json.load(json_file)  # Load JSON content from file
+        
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+        client = gspread.authorize(creds)
+        return client, None  # Return client object
+    except Exception as e:
+        return None, str(e)  # Return error message if authentication fails
 
-
-def save_data(df):
+def load_data(client, sheet_name):
     """
-    Saves the DataFrame to a CSV file.
+    Load job applications from a user-specified Google Sheet into a DataFrame.
     """
-    df.to_csv(CSV_FILE, index=False, encoding="utf-8")
+    try:
+        sheet = client.open(sheet_name).sheet1
+        data = sheet.get_all_records()
+
+        if data:
+            df = pd.DataFrame(data)
+        else:
+            df = pd.DataFrame(columns=["company", "job_links", "date_applied", "connection_status", "application_status"])
+
+        return df, None  # Return data
+    except Exception as e:
+        return None, str(e)  # Return error message
 
 
-def main():
-    st.title("📊 Job Application Tracker")
+def save_data(client, sheet_name, df):
+    """
+    Save job applications from DataFrame to a user-specified Google Sheet.
+    """
+    try:
+        sheet = client.open(sheet_name).sheet1
+        sheet.clear()  # Clear existing data
 
-    # Load the data
-    df = load_data()
+        # Add column headers
+        sheet.append_row(df.columns.tolist())
 
-    # Sidebar Navigation
-    page_selection = st.sidebar.radio(
-        "Navigation",
-        [
-            "📌 Add Application",
-            "🔎 Search by Company",
-            "📅 Filter by Date",
-            "📋 View All Applications",
-        ],
-    )
+        # Append data rows
+        for row in df.values.tolist():
+            sheet.append_row(row)
 
-    if page_selection == "📌 Add Application":
-        add_application_page(df)
-    elif page_selection == "🔎 Search by Company":
-        search_by_company_page(df)
-    elif page_selection == "📅 Filter by Date":
-        filter_by_date_page(df)
-    elif page_selection == "📋 View All Applications":
-        view_all_applications_page(df)
+        return None  # No error
+    except Exception as e:
+        return str(e)  # Return error message
 
-
-def add_application_page(df):
+def add_application_page(df, client, sheet_name):
     st.header("📝 Add a New Job Application")
 
     with st.form("add_application_form", clear_on_submit=True):
@@ -115,10 +115,14 @@ def add_application_page(df):
                     "application_status": application_status,
                 }
 
-                df = df.append(new_data, ignore_index=True)
-                save_data(df)
+                df = pd.concat([df, pd.DataFrame([new_data])], ignore_index=True)
+                error = save_data(client, sheet_name, df)
 
-                st.success(f"✅ Application for '{company}' added successfully.")
+                if error:
+                    st.error(f"❌ Failed to Save Data: {error}")
+                else:
+                    st.success(f"✅ Application for '{company}' added successfully!")
+
 
 
 def search_by_company_page(df):
@@ -190,7 +194,7 @@ def search_by_company_page(df):
                         I would greatly appreciate a referral for the position.  
 
                         Best regards,  
-                        Sachin Adlakha  
+                        Adamay Mann 
                         """
                     )
 
@@ -201,13 +205,13 @@ def search_by_company_page(df):
                     Hi [Recruiter's Name],  
 
                     I hope you're doing well! I'm a passionate software engineer and competitive programmer, actively building innovative projects  
-                    ([Portfolio](https://sachinadlakha3d.vercel.app/)). I'm eager to apply for a Software Engineer Intern role at **{row['company']}**  
+                    ([Portfolio](https://adamaymann.servatom.com/)). I'm eager to apply for a Software Engineer Intern role at **{row['company']}**  
                     and would love to interview if I'm a good fit. Any advice for improvement would also be greatly appreciated!  
 
                     Best regards,  
-                    Sachin Adlakha  
-                    Email: sa9082@nyu.edu  
-                    LinkedIn: [Sachin Adlakha](https://www.linkedin.com/in/sachin-adlakha/)  
+                    Adamay Mann 
+                    Email: am14579.edu  
+                    LinkedIn: [Adamay Mann](https://www.linkedin.com/in/adamaymann7/)  
                     """
                 )
                 ##You can put your own email and portfolio link later above to make this your own personal message
@@ -286,7 +290,7 @@ def filter_by_date_page(df):
                         I would greatly appreciate a referral for the position.  
 
                         Best regards,  
-                        Sachin Adlakha  
+                        Adamay Mann
                         """
                     )
 
@@ -297,13 +301,13 @@ def filter_by_date_page(df):
                         Hi [Recruiter's Name],  
 
                         I hope you're doing well! I'm a passionate software engineer and competitive programmer, actively building innovative projects  
-                        ([Portfolio](https://sachinadlakha3d.vercel.app/)). I'm eager to apply for a Software Engineer Intern role at **{row['company']}**  
+                        ([Portfolio](https://adamaymann.servatom.com/)). I'm eager to apply for a Software Engineer Intern role at **{row['company']}**  
                         and would love to interview if I'm a good fit. Any advice for improvement would also be greatly appreciated!  
 
                         Best regards,  
-                        Sachin Adlakha  
-                        Email: sa9082@nyu.edu  
-                        LinkedIn: [Sachin Adlakha](https://www.linkedin.com/in/sachin-adlakha/)  
+                        Adamay Mann  
+                        Email: am14579@nyu.edu  
+                        LinkedIn: [Adamay Mann](https://www.linkedin.com/in/adamaymann7/)  
                         """
                     )
 
@@ -338,6 +342,59 @@ def view_all_applications_page(df):
         st.dataframe(df)
     else:
         st.warning("No applications have been added yet!")
+
+def main():
+    st.title("📊 Job Application Tracker")
+
+    # Step 1: User uploads Google Cloud credentials JSON file
+    st.sidebar.header("🔐 Google Sheets Setup")
+    json_file = st.sidebar.file_uploader("Upload your Google Cloud JSON file", type=["json"])
+    sheet_name = st.sidebar.text_input("Enter your Google Sheet name", "Job Applications")
+
+    if json_file and st.sidebar.button("🔗 Connect to Google Sheets"):
+        # Authenticate using the uploaded JSON file
+        client, error = authenticate_google_sheets(json_file)
+
+        if error:
+            st.sidebar.error(f"❌ Authentication Failed: {error}")
+        else:
+            st.sidebar.success("✅ Successfully Connected to Google Sheets!")
+            df, error = load_data(client, sheet_name)
+
+            if error:
+                st.error(f"❌ Failed to Load Data: {error}")
+            else:
+                st.session_state["df"] = df  # Store in session state
+                st.session_state["client"] = client
+                st.session_state["sheet_name"] = sheet_name
+                st.success("📋 Data Loaded Successfully!")
+
+    # Proceed only if data is available
+    if "df" in st.session_state and "client" in st.session_state:
+        df = st.session_state["df"]
+        client = st.session_state["client"]
+        sheet_name = st.session_state["sheet_name"]
+
+        # Sidebar Navigation
+        page_selection = st.sidebar.radio(
+            "Navigation",
+            [
+                "📌 Add Application",
+                "🔎 Search by Company",
+                "📅 Filter by Date",
+                "📋 View All Applications",
+            ],
+        )
+
+        if page_selection == "📌 Add Application":
+            add_application_page(df, client, sheet_name)
+        elif page_selection == "🔎 Search by Company":
+            search_by_company_page(df)
+        elif page_selection == "📅 Filter by Date":
+            filter_by_date_page(df)
+        elif page_selection == "📋 View All Applications":
+            view_all_applications_page(df)
+
 
 
 if __name__ == "__main__":
