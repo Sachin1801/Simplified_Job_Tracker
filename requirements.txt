@@ -1,3 +1,6 @@
 streamlit
 pandas
 watchdog
+gspread
+google_auth_oauthlib.flow
+google.oauth2.credentials
