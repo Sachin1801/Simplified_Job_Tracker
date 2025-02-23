@@ -5,7 +5,8 @@ from job_tracker.pages import (
     add_application_page,
     search_by_company_page,
     filter_by_date_page,
-    view_all_applications_page
+    view_all_applications_page,
+    settings_page
 )
 
 def main():
@@ -22,11 +23,14 @@ def main():
     
     page_selection = st.sidebar.radio(
         "Navigation",
-        ["📌 Add Application", "🔎 Search by Company", "📅 Filter by Date", "📋 View All Applications"]
+        ["📌 Add Application", "🔎 Search by Company", "📅 Filter by Date", 
+         "📋 View All Applications", "⚙️ Settings"]
     )
 
     # Route to appropriate page
-    if page_selection == "📌 Add Application":
+    if page_selection == "⚙️ Settings":
+        settings_page()
+    elif page_selection == "📌 Add Application":
         add_application_page(df)
     elif page_selection == "🔎 Search by Company":
         search_by_company_page(df)

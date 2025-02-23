@@ -4,6 +4,7 @@ from constants.constants import CONNECTION_STATUS_OPTIONS, APPLICATION_STATUS_OP
 from job_tracker.sheets import save_data_sheet
 from job_tracker.utils import get_connection_request_message, get_recruiter_message
 import pandas as pd
+from job_tracker.config_manager import load_user_config, save_user_config
 
 def add_application_page(df):
     st.header("📝 Add a New Job Application")
@@ -111,3 +112,25 @@ def update_application(df, index, row, new_job_links, new_connection_status, new
         df.at[index, "application_status"] = new_application_status
         save_data_sheet(df)
         st.success(f"✅ Updated {row['company']}!")
+
+def settings_page():
+    st.header("⚙️ Settings")
+    config = load_user_config()
+    
+    with st.form("user_settings"):
+        name = st.text_input("Full Name", value=config.get('name', ''))
+        email = st.text_input("Email", value=config.get('email', ''))
+        linkedin_url = st.text_input("LinkedIn URL", value=config.get('linkedin_url', ''))
+        portfolio_url = st.text_input("Portfolio URL", value=config.get('portfolio_url', ''))
+        position = st.text_input("Target Position", value=config.get('position', ''))
+        
+        if st.form_submit_button("💾 Save Settings"):
+            new_config = {
+                "name": name,
+                "email": email,
+                "linkedin_url": linkedin_url,
+                "portfolio_url": portfolio_url,
+                "position": position
+            }
+            save_user_config(new_config)
+            st.success("✅ Settings saved successfully!")
