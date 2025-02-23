@@ -23,3 +23,5 @@ client_secret
 client_secret.*
 client_secret.json
 
+.qodo
+.auth_cache
